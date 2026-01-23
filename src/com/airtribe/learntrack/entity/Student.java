@@ -36,4 +36,9 @@ public class Student extends Person {
         this.active = false;
     }
 
+    @Override
+    public String getDisplayName() {
+        return "Student: " + super.getDisplayName() + " | Batch: " + batch;
+    }
+
 }
