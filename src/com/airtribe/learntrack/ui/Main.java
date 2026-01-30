@@ -2,6 +2,8 @@ package com.airtribe.learntrack.ui;
 
 import com.airtribe.learntrack.entity.Person;
 import com.airtribe.learntrack.entity.Student;
+import com.airtribe.learntrack.exception.EntityNotFoundException;
+import com.airtribe.learntrack.service.StudentService;
 import com.airtribe.learntrack.util.IdGenerator;
 
 public class Main {
@@ -22,6 +24,19 @@ public class Main {
         System.out.println(s1.getDisplayName());
         System.out.println(p1.getDisplayName());
         System.out.println(p1.getId() );
+
+        StudentService studentService = new StudentService();
+
+        // Using StudentService to addStudent.
+        studentService.addStudent(s1);
+
+        try{
+            Student student = studentService.getStudentById(1);
+            System.out.println(student.getDisplayName());
+        } catch (EntityNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
 
     }
 }

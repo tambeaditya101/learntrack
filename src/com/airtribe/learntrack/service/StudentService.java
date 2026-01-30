@@ -1,6 +1,7 @@
 package com.airtribe.learntrack.service;
 
 import com.airtribe.learntrack.entity.Student;
+import com.airtribe.learntrack.exception.EntityNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,31 +24,30 @@ public class StudentService {
                 return student;
             }
         }
-        return null;
+//        return null;
+        throw new EntityNotFoundException("Student with id " + id + " not found");
+
     }
 
-    public boolean updateStudent(int id, String firstName, String lastName, String batch) {
+    public void updateStudent(int id, String firstName, String lastName, String batch) {
         Student student = getStudentById(id);
-
-        if (student == null) {
-            return false;
-        }
 
         student.setFirstName(firstName);
         student.setLastName(lastName);
         student.setBatch(batch);
-        return true;
     }
 
-    public boolean deactivateStudent(int id) {
+    // method overloading
+    public void updateStudent(int id, String firstName, String lastName) {
         Student student = getStudentById(id);
 
-        if (student == null) {
-            return false;
-        }
+        student.setFirstName(firstName);
+        student.setLastName(lastName);
+    }
 
+    public void deactivateStudent(int id) {
+        Student student = getStudentById(id);
         student.deactivate();
-        return true;
     }
 
 
