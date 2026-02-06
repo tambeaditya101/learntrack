@@ -1,10 +1,12 @@
 package com.airtribe.learntrack.ui;
 
 import com.airtribe.learntrack.entity.Course;
+import com.airtribe.learntrack.entity.Enrollment;
 import com.airtribe.learntrack.entity.Student;
 import com.airtribe.learntrack.exception.EntityNotFoundException;
 import com.airtribe.learntrack.exception.InvalidInputException;
 import com.airtribe.learntrack.service.CourseService;
+import com.airtribe.learntrack.service.EnrollmentService;
 import com.airtribe.learntrack.service.StudentService;
 import com.airtribe.learntrack.util.IdGenerator;
 import com.airtribe.learntrack.util.InputValidator;
@@ -16,6 +18,7 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     private static final StudentService studentService = new StudentService();
     private static final CourseService courseService = new CourseService();
+    private static final EnrollmentService enrollmentService = new EnrollmentService();
 
 
 
@@ -30,7 +33,7 @@ public class Main {
                 switch (mainChoice){
                     case 1 -> studentManagement();
                     case 2 -> courseManagement();
-                    case 3 -> System.out.println("Enrollment Management - Coming Soon!");
+                    case 3 -> enrollmentManagement();
                     case 0 -> {
                         mainRunning = false;
                         System.out.println("Exiting LearnTrack. Goodbye!");
@@ -86,7 +89,7 @@ public class Main {
         System.out.println("2. View All Students");
         System.out.println("3. Find Student by ID");
         System.out.println("4. Deactivate Student");
-        System.out.println("0. Exit");
+        System.out.println("0. Back");
         System.out.print("Enter choice: ");
     }
 
@@ -262,6 +265,98 @@ public class Main {
         try {
             courseService.deactivateCourse(id);
             System.out.println("Course deactivated successfully.");
+        } catch (EntityNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //enrollment management methods
+    private static void enrollmentManagement() {
+        boolean running = true;
+
+        while (running) {
+            printEnrollmentMenu();
+            int choice = readInt();
+
+            switch (choice) {
+                case 1 -> enrollStudent();
+                case 2 -> viewEnrollmentsByStudent();
+                case 3 -> updateEnrollmentStatus();
+                case 0 -> {
+                    running = false;
+                    System.out.println("Returning to Main Menu...");
+                }
+                default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+
+    private static void printEnrollmentMenu() {
+        System.out.println("\n===== LearnTrack Enrollment Menu =====");
+        System.out.println("1. Enroll Student in Course");
+        System.out.println("2. View Enrollments by Student");
+        System.out.println("3. Update Enrollment Status");
+        System.out.println("0. Back");
+        System.out.print("Enter choice: ");
+    }
+
+    private static void enrollStudent() {
+        try {
+            System.out.print("Student ID: ");
+            int studentId = readInt();
+
+            studentService.getStudentById(studentId); // validate student exists
+
+            System.out.print("Course ID: ");
+            int courseId = readInt();
+
+            courseService.getCourseById(courseId); // validate course exists
+
+            enrollmentService.enrollStudent(
+                    studentId,
+                    courseId,
+                    IdGenerator.getNextEnrollmentId()
+            );
+
+            System.out.println("Student enrolled successfully.");
+
+        } catch (EntityNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void viewEnrollmentsByStudent() {
+        System.out.print("Student ID: ");
+        int studentId = readInt();
+
+        try {
+            var enrollments =
+                    enrollmentService.getEnrollmentsByStudentId(studentId);
+
+            for (Enrollment e : enrollments) {
+                System.out.println(
+                        "Enrollment ID: " + e.getId() +
+                                ", Course ID: " + e.getCourseId() +
+                                ", Status: " + e.getStatus()
+                );
+            }
+
+        } catch (EntityNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void updateEnrollmentStatus() {
+        System.out.print("Enrollment ID: ");
+        int enrollmentId = readInt();
+
+        System.out.print("New Status (ACTIVE/COMPLETED/CANCELLED): ");
+        String status = scanner.nextLine();
+
+        try {
+            enrollmentService.updateEnrollmentStatus(enrollmentId, status);
+            System.out.println("Enrollment status updated.");
         } catch (EntityNotFoundException e) {
             System.out.println(e.getMessage());
         }
