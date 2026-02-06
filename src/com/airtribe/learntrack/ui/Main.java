@@ -1,8 +1,10 @@
 package com.airtribe.learntrack.ui;
 
+import com.airtribe.learntrack.entity.Course;
 import com.airtribe.learntrack.entity.Student;
 import com.airtribe.learntrack.exception.EntityNotFoundException;
 import com.airtribe.learntrack.exception.InvalidInputException;
+import com.airtribe.learntrack.service.CourseService;
 import com.airtribe.learntrack.service.StudentService;
 import com.airtribe.learntrack.util.IdGenerator;
 import com.airtribe.learntrack.util.InputValidator;
@@ -13,6 +15,8 @@ public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
     private static final StudentService studentService = new StudentService();
+    private static final CourseService courseService = new CourseService();
+
 
 
     public static void main(String[] args) {
@@ -25,7 +29,7 @@ public class Main {
 
                 switch (mainChoice){
                     case 1 -> studentManagement();
-                    case 2 -> System.out.println("Course Management - Coming Soon!");
+                    case 2 -> courseManagement();
                     case 3 -> System.out.println("Enrollment Management - Coming Soon!");
                     case 0 -> {
                         mainRunning = false;
@@ -39,6 +43,25 @@ public class Main {
 
     }
 
+    // Main menu
+    private static void printMainMenu() {
+        System.out.println("\n===== LearnTrack Main Menu =====");
+        System.out.println("1. Student Management");
+        System.out.println("2. Course Management");
+        System.out.println("3. Enrollment Management");
+        System.out.println("0. Exit");
+        System.out.print("Enter choice: ");
+    }
+
+    private static int readInt() {
+        try {
+            return Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    // Student management methods
     private static void studentManagement() {
         boolean studentMenuRunning = true;
         while (studentMenuRunning) {
@@ -57,16 +80,6 @@ public class Main {
             }
         }}
 
-
-    private static void printMainMenu() {
-        System.out.println("\n===== LearnTrack Main Menu =====");
-        System.out.println("1. Student Management");
-        System.out.println("2. Course Management");
-        System.out.println("3. Enrollment Management");
-        System.out.println("0. Exit");
-        System.out.print("Enter choice: ");
-    }
-
     private static void printStudentMenu() {
         System.out.println("\n===== LearnTrack Student Menu =====");
         System.out.println("1. Add Student");
@@ -75,14 +88,6 @@ public class Main {
         System.out.println("4. Deactivate Student");
         System.out.println("0. Exit");
         System.out.print("Enter choice: ");
-    }
-
-    private static int readInt() {
-        try {
-            return Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
     }
 
     private static void addStudent() {
@@ -172,5 +177,96 @@ public class Main {
             System.out.println(e.getMessage());
         }
     }
+
+    // Course management methods
+    private static void courseManagement() {
+        boolean running = true;
+
+        while (running) {
+            printCourseMenu();
+            int choice = readInt();
+
+            switch (choice) {
+                case 1 -> addCourse();
+                case 2 -> viewAllCourses();
+                case 3 -> deactivateCourse();
+                case 0 -> {
+                    running = false;
+                    System.out.println("Returning to Main Menu...");
+                }
+                default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+    private static void printCourseMenu() {
+        System.out.println("\n===== LearnTrack Course Menu =====");
+        System.out.println("1. Add Course");
+        System.out.println("2. View All Courses");
+        System.out.println("3. Deactivate Course");
+        System.out.println("0. Back");
+        System.out.print("Enter choice: ");
+    }
+
+    private static void addCourse() {
+        try {
+            System.out.print("Course Name: ");
+            String name = scanner.nextLine();
+
+            if (!InputValidator.isValidString(name)) {
+                throw new InvalidInputException("Course name cannot be empty.");
+            }
+
+            System.out.print("Description: ");
+            String description = scanner.nextLine();
+
+            System.out.print("Duration (weeks): ");
+            int duration = readInt();
+
+            if (duration <= 0) {
+                throw new InvalidInputException("Duration must be positive.");
+            }
+
+            Course course = new Course(
+                    IdGenerator.getNextCourseId(),
+                    name,
+                    description,
+                    duration
+            );
+
+            courseService.addCourse(course);
+            System.out.println("Course added successfully.");
+
+        } catch (InvalidInputException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void viewAllCourses() {
+        var courses = courseService.getAllCourses();
+
+        if (courses.isEmpty()) {
+            System.out.println("No courses found.");
+            return;
+        }
+
+        for (Course course : courses) {
+            System.out.println(course.getCourseName() + " (" + course.getDurationInWeeks() + " weeks)" + (course.isActive() ? " [Active]" : " [Inactive]"));
+        }
+    }
+
+    private static void deactivateCourse() {
+        System.out.print("Enter course ID: ");
+        int id = readInt();
+
+        try {
+            courseService.deactivateCourse(id);
+            System.out.println("Course deactivated successfully.");
+        } catch (EntityNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
 
 }
